@@ -1,0 +1,20 @@
+from flask import Flask, request, jsonify
+from interpreter import interpreter
+import os
+
+app = Flask(__name__)
+
+# Lock down model directly in backend code to save credits
+interpreter.llm.model = "google/gemini-2.5-flash"  # Or your chosen Groq alternative
+interpreter.llm.api_key = os.getenv("GEMINI_API_KEY")
+interpreter.auto_run = True  # Automatically run generated code chunks
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    user_message = request.json.get("message")
+    # Captures tool call outputs and text replies from the runtime
+    response = interpreter.chat(user_message)
+    return jsonify({"response": response})
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
